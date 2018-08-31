@@ -2,10 +2,11 @@ package flexibleengine
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/huaweicloud/golangsdk/openstack/sfs/v2/shares"
-	"testing"
 )
 
 func TestAccSFSFileSystemV2_basic(t *testing.T) {

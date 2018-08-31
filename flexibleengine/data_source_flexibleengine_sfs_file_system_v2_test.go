@@ -2,9 +2,10 @@ package flexibleengine
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccSFSFileSystemV2DataSource_basic(t *testing.T) {
