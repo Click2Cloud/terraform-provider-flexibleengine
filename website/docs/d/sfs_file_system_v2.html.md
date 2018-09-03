@@ -58,6 +58,8 @@ The following attributes are exported:
 
 * `export_location` - The path for accessing the shared file system.
 
+* `export_locations` - The list of mount locations.
+
 * `access_level` - The level of the access rule.
 
 * `access_rules_status` - The status of the share access rule.
@@ -65,6 +67,8 @@ The following attributes are exported:
 * `access_type` - The type of the share access rule.
 
 * `access_to` - The access that the back end grants or denies.
+
+* `state` - The status of the access rule.
 
 * `share_access_id` - The UUID of the share access rule.
 

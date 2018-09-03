@@ -95,6 +95,10 @@ func resourceSFSFileSystemV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"volume_type": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"export_location": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -280,7 +284,7 @@ func resourceSFSFileSystemV2Delete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"available"},
+		Pending:    []string{"available", "deleting"},
 		Target:     []string{"deleted"},
 		Refresh:    waitForSFSFileDelete(sfsClient, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
