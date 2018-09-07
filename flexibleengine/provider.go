@@ -168,6 +168,9 @@ func Provider() terraform.ResourceProvider {
 			"flexibleengine_vpc_route_ids_v2":          dataSourceVPCRouteIdsV2(),
 			"flexibleengine_vpc_peering_connection_v2": dataSourceVpcPeeringConnectionV2(),
 			"flexibleengine_sfs_file_system_v2":        dataSourceSFSFileSystemV2(),
+			"flexibleengine_rts_software_config_v1":    dataSourceRtsSoftwareConfigV1(),
+			"flexibleengine_rts_stack_v1":              dataSourceRTSStackV1(),
+			"flexibleengine_rts_stack_resource_v1":     dataSourceRTSStackResourcesV1(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -221,6 +224,8 @@ func Provider() terraform.ResourceProvider {
 			"flexibleengine_vpc_peering_connection_v2":          resourceVpcPeeringConnectionV2(),
 			"flexibleengine_vpc_peering_connection_accepter_v2": resourceVpcPeeringConnectionAccepterV2(),
 			"flexibleengine_sfs_file_system_v2":                 resourceSFSFileSystemV2(),
+			"flexibleengine_rts_software_config_v1":             resourceSoftwareConfigV1(),
+			"flexibleengine_rts_stack_v1":                       resourceRTSStackV1(),
 		},
 
 		ConfigureFunc: configureProvider,
