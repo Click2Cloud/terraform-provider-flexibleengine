@@ -13,9 +13,8 @@ import (
 	"fmt"
 	"log"
 
-	//"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 )
 
 // ServerNICS is a structured representation of a Gophercloud servers.Server
@@ -68,7 +67,7 @@ type ServerNetwork struct {
 func getAllServerNetwork(d *schema.ResourceData, meta interface{}) ([]ServerNetwork, error) {
 	var serverNetworks []ServerNetwork
 
-	networks := d.Get("addresses").([]interface{})
+	networks := d.Get("network").([]interface{})
 	for _, v := range networks {
 		network := v.(map[string]interface{})
 		networkID := network["uuid"].(string)
@@ -188,6 +187,7 @@ func expandBmsInstanceNetworks(allInstanceNetworks []ServerNetwork) []servers.Ne
 
 	return networks
 }
+
 // flattenInstanceNetworks collects instance network information from different
 // sources and aggregates it all together into a map array.
 func flattenServerNetwork(d *schema.ResourceData, meta interface{}) ([]map[string]interface{}, error) {
