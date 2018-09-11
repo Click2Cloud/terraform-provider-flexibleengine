@@ -13,7 +13,7 @@ func TestAccComputeV2BmsInstance_basic(t *testing.T) {
 	var instance servers.Server
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccBmsFlavorPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckComputeV2BmsInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccComputeV2BmsInstance_basic(t *testing.T) {
 func TestAccComputeV2BmsInstance_timeout(t *testing.T) {
 	var instance servers.Server
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccBmsFlavorPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckComputeV2InstanceDestroy,
 		Steps: []resource.TestStep{
@@ -112,7 +112,8 @@ func testAccCheckComputeV2BmsInstanceExists(n string, instance *servers.Server) 
 var testAccComputeV2BmsInstance_basic = fmt.Sprintf(`
 resource "flexibleengine_compute_bms_instance_v2" "instance_1" {
   name = "instance_1"
-image_id = "%s"
+  image_id = "%s"
+  flavor_id = "%s"
   security_groups = ["default"]
   availability_zone = "%s"
   metadata {
@@ -122,12 +123,13 @@ image_id = "%s"
     uuid = "%s"
   }
 }
-`, OS_IMAGE_ID, OS_AVAILABILITY_ZONE, OS_NETWORK_ID)
+`, OS_IMAGE_ID, OS_BMS_FLAVOR_NAME, OS_AVAILABILITY_ZONE, OS_NETWORK_ID)
 
 var testAccComputeV2BmsInstance_update = fmt.Sprintf(`
 resource "flexibleengine_compute_bms_instance_v2" "instance_1" {
   name = "instance_2"
-image_id = "%s"
+  image_id = "%s"
+  flavor_id = "%s"
   security_groups = ["default"]
   availability_zone = "%s"
   metadata {
@@ -137,12 +139,13 @@ image_id = "%s"
     uuid = "%s"
   }
 }
-`, OS_IMAGE_ID, OS_AVAILABILITY_ZONE, OS_NETWORK_ID)
+`, OS_IMAGE_ID, OS_BMS_FLAVOR_NAME, OS_AVAILABILITY_ZONE, OS_NETWORK_ID)
 
 var testAccComputeV2BmsInstance_timeout = fmt.Sprintf(`
 resource "flexibleengine_compute_instance_v2" "instance_1" {
   name = "instance_1"
-image_id = "%s"
+  image_id = "%s"
+  flavor_id = "%s"
   security_groups = ["default"]
   network {
     uuid = "%s"
@@ -152,4 +155,4 @@ image_id = "%s"
     create = "10m"
   }
 }
-`, OS_IMAGE_ID, OS_NETWORK_ID)
+`, OS_IMAGE_ID, OS_BMS_FLAVOR_NAME, OS_NETWORK_ID)
