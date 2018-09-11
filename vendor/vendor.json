@@ -830,6 +830,12 @@
 			"revisionTime": "2018-09-05T09:58:59Z"
 		},
 		{
+			"checksumSHA1": "B/kJtzfPU+0/Gzu88rOYiG9pbFw=",
+			"path": "github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/secgroups",
+			"revision": "1ef4c250ce2ea6c28095385c1800ac8a74492ca9",
+			"revisionTime": "2018-09-05T09:58:59Z"
+		},
+		{
 			"checksumSHA1": "+Qnq3QOQImVKPxE3NSvIl7++rdA=",
 			"path": "github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/startstop",
 			"revision": "1ef4c250ce2ea6c28095385c1800ac8a74492ca9",

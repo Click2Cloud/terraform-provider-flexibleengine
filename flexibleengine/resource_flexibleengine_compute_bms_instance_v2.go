@@ -12,6 +12,7 @@ import (
 	//"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/availabilityzones"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/keypairs"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/startstop"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/secgroups"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/flavors"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/images"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
@@ -24,6 +25,7 @@ func resourceComputeBMSInstanceV2() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceComputeBMSInstanceV2Create,
 		Read:   resourceComputeBMSInstanceV2Read,
+		Update: resourceComputeBMSInstanceV2Update,
 		Delete: resourceComputeBMSInstanceV2Delete,
 
 		Timeouts: &schema.ResourceTimeout{
@@ -380,6 +382,169 @@ func resourceComputeBMSInstanceV2Read(d *schema.ResourceData, meta interface{}) 
 	d.Set("region", GetRegion(d, config))
 
 	return nil
+}
+
+func resourceComputeBMSInstanceV2Update(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+	computeClient, err := config.computeV2HWClient(GetRegion(d, config))
+	if err != nil {
+		return fmt.Errorf("Error creating FlexibleEngine compute client: %s", err)
+	}
+
+	var updateOpts servers.UpdateOpts
+	if d.HasChange("name") {
+		updateOpts.Name = d.Get("name").(string)
+	}
+
+	if updateOpts != (servers.UpdateOpts{}) {
+		_, err := servers.Update(computeClient, d.Id(), updateOpts).Extract()
+		if err != nil {
+			return fmt.Errorf("Error updating FlexibleEngine server: %s", err)
+		}
+	}
+
+	if d.HasChange("metadata") {
+		oldMetadata, newMetadata := d.GetChange("metadata")
+		var metadataToDelete []string
+
+		// Determine if any metadata keys were removed from the configuration.
+		// Then request those keys to be deleted.
+		for oldKey, _ := range oldMetadata.(map[string]interface{}) {
+			var found bool
+			for newKey, _ := range newMetadata.(map[string]interface{}) {
+				if oldKey == newKey {
+					found = true
+				}
+			}
+
+			if !found {
+				metadataToDelete = append(metadataToDelete, oldKey)
+			}
+		}
+
+		for _, key := range metadataToDelete {
+			err := servers.DeleteMetadatum(computeClient, d.Id(), key).ExtractErr()
+			if err != nil {
+				return fmt.Errorf("Error deleting metadata (%s) from server (%s): %s", key, d.Id(), err)
+			}
+		}
+
+		// Update existing metadata and add any new metadata.
+		metadataOpts := make(servers.MetadataOpts)
+		for k, v := range newMetadata.(map[string]interface{}) {
+			metadataOpts[k] = v.(string)
+		}
+
+		_, err := servers.UpdateMetadata(computeClient, d.Id(), metadataOpts).Extract()
+		if err != nil {
+			return fmt.Errorf("Error updating FlexibleEngine server (%s) metadata: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("security_groups") {
+		oldSGRaw, newSGRaw := d.GetChange("security_groups")
+		oldSGSet := oldSGRaw.(*schema.Set)
+		newSGSet := newSGRaw.(*schema.Set)
+		secgroupsToAdd := newSGSet.Difference(oldSGSet)
+		secgroupsToRemove := oldSGSet.Difference(newSGSet)
+
+		log.Printf("[DEBUG] Security groups to add: %v", secgroupsToAdd)
+
+		log.Printf("[DEBUG] Security groups to remove: %v", secgroupsToRemove)
+
+		for _, g := range secgroupsToRemove.List() {
+			err := secgroups.RemoveServer(computeClient, d.Id(), g.(string)).ExtractErr()
+			if err != nil && err.Error() != "EOF" {
+				if _, ok := err.(golangsdk.ErrDefault404); ok {
+					continue
+				}
+
+				return fmt.Errorf("Error removing security group (%s) from FlexibleEngine server (%s): %s", g, d.Id(), err)
+			} else {
+				log.Printf("[DEBUG] Removed security group (%s) from instance (%s)", g, d.Id())
+			}
+		}
+
+		for _, g := range secgroupsToAdd.List() {
+			err := secgroups.AddServer(computeClient, d.Id(), g.(string)).ExtractErr()
+			if err != nil && err.Error() != "EOF" {
+				return fmt.Errorf("Error adding security group (%s) to FlexibleEngine server (%s): %s", g, d.Id(), err)
+			}
+			log.Printf("[DEBUG] Added security group (%s) to instance (%s)", g, d.Id())
+		}
+	}
+
+	if d.HasChange("admin_pass") {
+		if newPwd, ok := d.Get("admin_pass").(string); ok {
+			err := servers.ChangeAdminPassword(computeClient, d.Id(), newPwd).ExtractErr()
+			if err != nil {
+				return fmt.Errorf("Error changing admin password of FlexibleEngine server (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("flavor_id") || d.HasChange("flavor_name") {
+		var newFlavorId string
+		var err error
+		if d.HasChange("flavor_id") {
+			newFlavorId = d.Get("flavor_id").(string)
+		} else {
+			newFlavorName := d.Get("flavor_name").(string)
+			newFlavorId, err = flavors.IDFromName(computeClient, newFlavorName)
+			if err != nil {
+				return err
+			}
+		}
+
+		resizeOpts := &servers.ResizeOpts{
+			FlavorRef: newFlavorId,
+		}
+		log.Printf("[DEBUG] Resize configuration: %#v", resizeOpts)
+		err = servers.Resize(computeClient, d.Id(), resizeOpts).ExtractErr()
+		if err != nil {
+			return fmt.Errorf("Error resizing FlexibleEngine server: %s", err)
+		}
+
+		// Wait for the instance to finish resizing.
+		log.Printf("[DEBUG] Waiting for instance (%s) to finish resizing", d.Id())
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"RESIZE"},
+			Target:     []string{"VERIFY_RESIZE"},
+			Refresh:    BmsServerV2StateRefreshFunc(computeClient, d.Id()),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("Error waiting for instance (%s) to resize: %s", d.Id(), err)
+		}
+
+		// Confirm resize.
+		log.Printf("[DEBUG] Confirming resize")
+		err = servers.ConfirmResize(computeClient, d.Id()).ExtractErr()
+		if err != nil {
+			return fmt.Errorf("Error confirming resize of FlexibleEngine server: %s", err)
+		}
+
+		stateConf = &resource.StateChangeConf{
+			Pending:    []string{"VERIFY_RESIZE"},
+			Target:     []string{"ACTIVE"},
+			Refresh:    BmsServerV2StateRefreshFunc(computeClient, d.Id()),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("Error waiting for instance (%s) to confirm resize: %s", d.Id(), err)
+		}
+	}
+
+	return resourceComputeInstanceV2Read(d, meta)
 }
 
 func resourceComputeBMSInstanceV2Delete(d *schema.ResourceData, meta interface{}) error {
