@@ -25,6 +25,14 @@ func TestAccComputeV2BmsInstance_basic(t *testing.T) {
 						"flexibleengine_compute_instance_v2.instance_1", "availability_zone", OS_AVAILABILITY_ZONE),
 				),
 			},
+			resource.TestStep{
+				Config: testAccComputeV2BmsInstance_update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckComputeV2BmsInstanceExists("flexibleengine_compute_instance_v2.instance_1", &instance),
+					resource.TestCheckResourceAttr(
+						"flexibleengine_compute_instance_v2.instance_1", "name", "instance_2"),
+				),
+			},
 		},
 	})
 }
@@ -103,8 +111,22 @@ func testAccCheckComputeV2BmsInstanceExists(n string, instance *servers.Server) 
 
 
 var testAccComputeV2BmsInstance_basic = fmt.Sprintf(`
-resource "flexibleengine_compute_instance_v2" "instance_1" {
+resource "flexibleengine_compute_bms_instance_v2" "instance_1" {
   name = "instance_1"
+  security_groups = ["default"]
+  availability_zone = "%s"
+  metadata {
+    foo = "bar"
+  }
+  network {
+    uuid = "%s"
+  }
+}
+`, OS_AVAILABILITY_ZONE, OS_NETWORK_ID)
+
+var testAccComputeV2BmsInstance_update = fmt.Sprintf(`
+resource "flexibleengine_compute_bms_instance_v2" "instance_1" {
+  name = "instance_2"
   security_groups = ["default"]
   availability_zone = "%s"
   metadata {
