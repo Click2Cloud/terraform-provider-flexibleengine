@@ -20,17 +20,17 @@ func TestAccComputeV2BmsInstance_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccComputeV2BmsInstance_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComputeV2BmsInstanceExists("flexibleengine_compute_instance_v2.instance_1", &instance),
+					testAccCheckComputeV2BmsInstanceExists("flexibleengine_compute_bms_server_v2.instance_1", &instance),
 					resource.TestCheckResourceAttr(
-						"flexibleengine_compute_instance_v2.instance_1", "availability_zone", OS_AVAILABILITY_ZONE),
+						"flexibleengine_compute_bms_server_v2.instance_1", "availability_zone", OS_AVAILABILITY_ZONE),
 				),
 			},
 			resource.TestStep{
 				Config: testAccComputeV2BmsInstance_update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComputeV2BmsInstanceExists("flexibleengine_compute_instance_v2.instance_1", &instance),
+					testAccCheckComputeV2BmsInstanceExists("flexibleengine_compute_bms_server_v2.instance_1", &instance),
 					resource.TestCheckResourceAttr(
-						"flexibleengine_compute_instance_v2.instance_1", "name", "instance_2"),
+						"flexibleengine_compute_bms_server_v2.instance_1", "name", "instance_2"),
 				),
 			},
 		},
@@ -47,7 +47,7 @@ func TestAccComputeV2BmsInstance_timeout(t *testing.T) {
 			resource.TestStep{
 				Config: testAccComputeV2BmsInstance_timeout,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComputeV2BmsInstanceExists("flexibleengine_compute_instance_v2.instance_1", &instance),
+					testAccCheckComputeV2BmsInstanceExists("flexibleengine_compute_bms_server_v2.instance_1", &instance),
 				),
 			},
 		},
@@ -62,7 +62,7 @@ func testAccCheckComputeV2BmsInstanceDestroy(s *terraform.State) error {
 	}
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "flexibleengine_compute_instance_v2" {
+		if rs.Type != "flexibleengine_compute_bms_server_v2" {
 			continue
 		}
 
@@ -110,10 +110,10 @@ func testAccCheckComputeV2BmsInstanceExists(n string, instance *servers.Server) 
 }
 
 var testAccComputeV2BmsInstance_basic = fmt.Sprintf(`
-resource "flexibleengine_compute_bms_instance_v2" "instance_1" {
+resource "flexibleengine_compute_bms_server_v2" "instance_1" {
   name = "instance_1"
-  image_id = "%s"
   flavor_id = "%s"
+  flavor_name = "%s"
   security_groups = ["default"]
   availability_zone = "%s"
   metadata {
@@ -123,13 +123,13 @@ resource "flexibleengine_compute_bms_instance_v2" "instance_1" {
     uuid = "%s"
   }
 }
-`, OS_IMAGE_ID, OS_BMS_FLAVOR_NAME, OS_AVAILABILITY_ZONE, OS_NETWORK_ID)
+`, OS_BMS_FLAVOR_NAME, OS_BMS_FLAVOR_NAME, OS_AVAILABILITY_ZONE, OS_NETWORK_ID)
 
 var testAccComputeV2BmsInstance_update = fmt.Sprintf(`
-resource "flexibleengine_compute_bms_instance_v2" "instance_1" {
+resource "flexibleengine_compute_bms_server_v2" "instance_1" {
   name = "instance_2"
-  image_id = "%s"
   flavor_id = "%s"
+  flavor_name = "%s"
   security_groups = ["default"]
   availability_zone = "%s"
   metadata {
@@ -139,20 +139,20 @@ resource "flexibleengine_compute_bms_instance_v2" "instance_1" {
     uuid = "%s"
   }
 }
-`, OS_IMAGE_ID, OS_BMS_FLAVOR_NAME, OS_AVAILABILITY_ZONE, OS_NETWORK_ID)
+`, OS_BMS_FLAVOR_NAME, OS_BMS_FLAVOR_NAME, OS_AVAILABILITY_ZONE, OS_NETWORK_ID)
 
 var testAccComputeV2BmsInstance_timeout = fmt.Sprintf(`
-resource "flexibleengine_compute_instance_v2" "instance_1" {
+resource "flexibleengine_compute_bms_server_v2" "instance_1" {
   name = "instance_1"
-  image_id = "%s"
   flavor_id = "%s"
+  flavor_name = "%s"
   security_groups = ["default"]
   network {
     uuid = "%s"
   }
 
   timeouts {
-    create = "10m"
+    create = "20m"
   }
 }
-`, OS_IMAGE_ID, OS_BMS_FLAVOR_NAME, OS_NETWORK_ID)
+`, OS_BMS_FLAVOR_NAME, OS_BMS_FLAVOR_NAME, OS_NETWORK_ID)

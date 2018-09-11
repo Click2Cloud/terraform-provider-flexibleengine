@@ -1,14 +1,14 @@
 ---
 layout: "flexibleengine"
-page_title: "FlexibleEngine: flexibleengine_compute_bms_instance_v2"
-sidebar_current: "docs-flexibleengine-resource-compute-bms-instance-v2"
+page_title: "FlexibleEngine: flexibleengine_compute_bms_server_v2"
+sidebar_current: "docs-flexibleengine-resource-compute-bms-server-v2"
 description: |-
-  Manages a V2 VM bms instance resource within FlexibleEngine.
+  Manages a BMS server resource within FlexibleEngine.
 ---
 
-# flexibleengine_compute_bms_instance_v2
+# flexibleengine_compute_bms_server_v2
 
-Manages a V2 VM bms instance resource within FlexibleEngine.
+Manages a BMS Server resource within FlexibleEngine.
 
 ## Example Usage
 
@@ -20,7 +20,7 @@ variable "flavor_id" {}
 variable "keypair_name" {}
 variable "network_id" {}
 
-resource "flexibleengine_compute_bms_instance_v2" "basic" {
+resource "flexibleengine_compute_bms_server_v2" "basic" {
   name            = "basic"
   image_id        = "${var.image_id}"
   flavor_id       = "${var.flavor_id}"
