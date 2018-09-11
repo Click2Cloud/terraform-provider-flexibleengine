@@ -8,17 +8,16 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/huaweicloud/golangsdk"
-	//"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/availabilityzones"
+	bms "github.com/huaweicloud/golangsdk/openstack/bms/v2/servers"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/keypairs"
-	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/startstop"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/secgroups"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/startstop"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/flavors"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/images"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
-	bms "github.com/huaweicloud/golangsdk/openstack/bms/v2/servers"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceComputeBMSInstanceV2() *schema.Resource {
@@ -45,7 +44,7 @@ func resourceComputeBMSInstanceV2() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"image_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -139,12 +138,6 @@ func resourceComputeBMSInstanceV2() *schema.Resource {
 							ForceNew: true,
 							Computed: true,
 						},
-						"floating_ip": &schema.Schema{
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							Removed:  "Use the flexibleengine_compute_floatingip_associate_v2 resource instead",
-						},
 						"mac": &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
@@ -160,7 +153,7 @@ func resourceComputeBMSInstanceV2() *schema.Resource {
 			"metadata": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"config_drive": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -169,7 +162,7 @@ func resourceComputeBMSInstanceV2() *schema.Resource {
 			"admin_pass": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 				Computed: true,
 			},
 			"access_ip_v4": &schema.Schema{
@@ -268,7 +261,7 @@ func resourceComputeBMSInstanceV2Create(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
 
-	server, err:= servers.Create(computeClient, createOpts).Extract()
+	server, err := servers.Create(computeClient, createOpts).Extract()
 
 	if err != nil {
 		return fmt.Errorf("Error creating FlexibleEngine server: %s", err)
@@ -637,7 +630,6 @@ func resourceBmsInstanceMetadataV2(d *schema.ResourceData) map[string]string {
 	return m
 }
 
-
 func getImageId(computeClient *golangsdk.ServiceClient, d *schema.ResourceData) (string, error) {
 
 	if imageId := d.Get("image_id").(string); imageId != "" {
@@ -699,5 +691,3 @@ func getFlavorId(client *golangsdk.ServiceClient, d *schema.ResourceData) (strin
 	flavorName := d.Get("flavor_name").(string)
 	return flavors.IDFromName(client, flavorName)
 }
-
-
