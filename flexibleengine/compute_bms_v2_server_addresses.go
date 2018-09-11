@@ -13,7 +13,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	//"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/servers"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -174,12 +175,25 @@ func getServerAddresses(addresses map[string]interface{}) []ServerAddress {
 	return allServerAddresses
 }
 
+func expandBmsInstanceNetworks(allInstanceNetworks []ServerNetwork) []servers.Network {
+	var networks []servers.Network
+	for _, v := range allInstanceNetworks {
+		n := servers.Network{
+			UUID:    v.UUID,
+			Port:    v.Port,
+			FixedIP: v.FixedIP,
+		}
+		networks = append(networks, n)
+	}
+
+	return networks
+}
 // flattenInstanceNetworks collects instance network information from different
 // sources and aggregates it all together into a map array.
 func flattenServerNetwork(d *schema.ResourceData, meta interface{}) ([]map[string]interface{}, error) {
 
 	config := meta.(*Config)
-	computeClient, err := config.computeV2Client(GetRegion(d, config))
+	computeClient, err := config.computeV2HWClient(GetRegion(d, config))
 	if err != nil {
 		return nil, fmt.Errorf("Error creating Flexibleengine compute client: %s", err)
 	}
