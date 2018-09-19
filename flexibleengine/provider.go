@@ -237,6 +237,8 @@ func Provider() terraform.ResourceProvider {
 			"flexibleengine_rts_stack_v1":                       resourceRTSStackV1(),
 			"flexibleengine_compute_bms_server_v2":              resourceComputeBMSInstanceV2(),
 			"flexibleengine_ces_alarmrule":                      resourceAlarmRule(),
+			"flexibleengine_vbs_backup_policy_v2":               resourceVBSBackupPolicyV2(),
+			"flexibleengine_vbs_backup_v2":                      resourceVBSBackupV2(),
 		},
 
 		ConfigureFunc: configureProvider,
