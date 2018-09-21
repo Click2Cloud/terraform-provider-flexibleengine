@@ -175,6 +175,8 @@ func Provider() terraform.ResourceProvider {
 			"flexibleengine_rts_software_config_v1":    dataSourceRtsSoftwareConfigV1(),
 			"flexibleengine_rts_stack_v1":              dataSourceRTSStackV1(),
 			"flexibleengine_rts_stack_resource_v1":     dataSourceRTSStackResourcesV1(),
+			"flexibleengine_vbs_backup_policy_v2":      dataSourceVBSBackupPolicyV2(),
+			"flexibleengine_vbs_backup_v2":             dataSourceVBSBackupV2(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{

@@ -1,6 +1,6 @@
 {
 	"comment": "",
-	"ignore": "appengine test github.com/hashicorp/nomad/ github.com/hashicorp/terraform/backend",
+	"ignore": "test",
 	"package": [
 		{
 			"checksumSHA1": "ly9VLPE9GKo2U7mnbZyjb2LDQ3w=",
@@ -927,6 +927,12 @@
 		{
 			"checksumSHA1": "0ja94F7LBVXcdh0pKQm9lNr1E+w=",
 			"path": "github.com/huaweicloud/golangsdk/openstack/vbs/v2/policies",
+			"revision": "147ed0f500e7ed9f4ba4e64581d006a82b154c5b",
+			"revisionTime": "2018-09-19T05:22:12Z"
+		},
+		{
+			"checksumSHA1": "eGSA6Q72Y03x5DkiahOcku6cA3Q=",
+			"path": "github.com/huaweicloud/golangsdk/openstack/vbs/v2/shares",
 			"revision": "147ed0f500e7ed9f4ba4e64581d006a82b154c5b",
 			"revisionTime": "2018-09-19T05:22:12Z"
 		},

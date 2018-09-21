@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/huaweicloud/golangsdk"
 	"github.com/huaweicloud/golangsdk/openstack/vbs/v2/policies"
-	"github.com/huaweicloud/golangsdk/openstack/vbs/v2/tags"
 )
 
 func resourceVBSBackupPolicyV2() *schema.Resource {
@@ -64,26 +63,6 @@ func resourceVBSBackupPolicyV2() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateVBSPolicyStatus,
 			},
-			"tags": &schema.Schema{
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": &schema.Schema{
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     false,
-							ValidateFunc: validateVBSTagKey,
-						},
-						"value": &schema.Schema{
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     false,
-							ValidateFunc: validateVBSTagValue,
-						},
-					},
-				},
-			},
 			"policy_resource_count": &schema.Schema{
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -109,7 +88,6 @@ func resourceVBSBackupPolicyV2Create(d *schema.ResourceData, meta interface{}) e
 			RemainFirstBackup: d.Get("retain_first_backup").(string),
 			Status:            d.Get("status").(string),
 		},
-		Tags: resourceVBSTagsV2(d),
 	}
 
 	create, err := policies.Create(vbsClient, createOpts).Extract()
@@ -166,25 +144,6 @@ func resourceVBSBackupPolicyV2Read(d *schema.ResourceData, meta interface{}) err
 	d.Set("status", n.ScheduledPolicy.Status)
 	d.Set("policy_resource_count", n.ResourceCount)
 
-	tags, err := tags.Get(vbsClient, d.Id()).Extract()
-
-	if err != nil {
-		if _, ok := err.(golangsdk.ErrDefault404); ok {
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Backup Policy Tags: %s", err)
-	}
-	var tagList []map[string]interface{}
-	for _, v := range tags.Tags {
-		tag := make(map[string]interface{})
-		tag["key"] = v.Key
-		tag["value"] = v.Value
-
-		tagList = append(tagList, tag)
-	}
-	if err := d.Set("tags", tagList); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving tags to state for backup policy (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 
@@ -196,44 +155,30 @@ func resourceVBSBackupPolicyV2Update(d *schema.ResourceData, meta interface{}) e
 	}
 	var updateOpts policies.UpdateOpts
 
-	if d.HasChange("name") || d.HasChange("start_time") || d.HasChange("frequency") ||
-		d.HasChange("rentention_num") || d.HasChange("retain_first_backup") || d.HasChange("status") {
-		if d.HasChange("name") {
-			updateOpts.Name = d.Get("name").(string)
-		}
-		if d.HasChange("start_time") {
-			updateOpts.ScheduledPolicy.StartTime = d.Get("start_time").(string)
-		}
-		if d.HasChange("frequency") {
-			updateOpts.ScheduledPolicy.Frequency = d.Get("frequency").(int)
-		}
-		if d.HasChange("rentention_num") {
-			updateOpts.ScheduledPolicy.RententionNum = d.Get("rentention_num").(int)
-		}
-		if d.HasChange("retain_first_backup") {
-			updateOpts.ScheduledPolicy.RemainFirstBackup = d.Get("retain_first_backup").(string)
-		}
-		if d.HasChange("status") {
-			updateOpts.ScheduledPolicy.Status = d.Get("status").(string)
-		}
-		_, err = policies.Update(vbsClient, d.Id(), updateOpts).Extract()
-		if err != nil {
-			return fmt.Errorf("Error updating backup policy: %s", err)
-		}
+	if d.HasChange("name") {
+		updateOpts.Name = d.Get("name").(string)
 	}
-	if d.HasChange("tags") {
-		oldTags, _ := tags.Get(vbsClient, d.Id()).Extract()
-		deleteopts := tags.BatchOpts{Action: tags.ActionDelete, Tags: oldTags.Tags}
-		deleteTags := tags.BatchAction(vbsClient, d.Id(), deleteopts)
-		if deleteTags.Err != nil {
-			return fmt.Errorf("Error updating backup policy tags: %s", deleteTags.Err)
-		}
+	if d.HasChange("start_time") {
+		updateOpts.ScheduledPolicy.StartTime = d.Get("start_time").(string)
+	}
+	if d.HasChange("frequency") {
+		updateOpts.ScheduledPolicy.Frequency = d.Get("frequency").(int)
+	}
+	if d.HasChange("rentention_num") {
+		updateOpts.ScheduledPolicy.RententionNum = d.Get("rentention_num").(int)
+	}
+	if d.HasChange("retain_first_backup") {
+		updateOpts.ScheduledPolicy.RemainFirstBackup = d.Get("retain_first_backup").(string)
+	}
+	if d.HasChange("status") {
+		updateOpts.ScheduledPolicy.Status = d.Get("status").(string)
+	}
+	_, err = policies.Update(vbsClient, d.Id(), updateOpts).Extract()
 
-		createTags := tags.BatchAction(vbsClient, d.Id(), tags.BatchOpts{Action: tags.ActionCreate, Tags: resourceVBSUpdateTagsV2(d)})
-		if createTags.Err != nil {
-			return fmt.Errorf("Error updating backup policy tags: %s", createTags.Err)
-		}
+	if err != nil {
+		return fmt.Errorf("Error updating backup policy: %s", err)
 	}
+
 	return resourceVBSBackupPolicyV2Read(d, meta)
 }
 
@@ -304,30 +249,4 @@ func waitForVBSPolicyActive(vbsClient *golangsdk.ServiceClient, policyID string)
 
 		return n, n.ScheduledPolicy.Status, nil
 	}
-}
-
-func resourceVBSTagsV2(d *schema.ResourceData) []policies.Tag {
-	rawTags := d.Get("tags").([]interface{})
-	tags := make([]policies.Tag, len(rawTags))
-	for i, raw := range rawTags {
-		rawMap := raw.(map[string]interface{})
-		tags[i] = policies.Tag{
-			Key:   rawMap["key"].(string),
-			Value: rawMap["value"].(string),
-		}
-	}
-	return tags
-}
-
-func resourceVBSUpdateTagsV2(d *schema.ResourceData) []tags.Tag {
-	rawTags := d.Get("tags").([]interface{})
-	tagList := make([]tags.Tag, len(rawTags))
-	for i, raw := range rawTags {
-		rawMap := raw.(map[string]interface{})
-		tagList[i] = tags.Tag{
-			Key:   rawMap["key"].(string),
-			Value: rawMap["value"].(string),
-		}
-	}
-	return tagList
 }

@@ -121,12 +121,7 @@ resource "flexibleengine_vbs_backup_policy_v2" "vbs" {
   status  = "ON"
   retain_first_backup = "N"
   rentention_num = 2
-  frequency = 1
-      tags =[
-        {
-          key = "k2"
-          value = "v2"
-          }]
+  frequency = 1     
 }
 `)
 
@@ -137,12 +132,7 @@ resource "flexibleengine_vbs_backup_policy_v2" "vbs" {
   status  = "ON"
   retain_first_backup = "N"
   rentention_num = 2
-  frequency = 1
-      tags =[
-        {
-          key = "k2"
-          value = "v2"
-          }] 
+  frequency = 1      
 }
 `)
 
@@ -154,12 +144,7 @@ resource "flexibleengine_vbs_backup_policy_v2" "vbs" {
   retain_first_backup = "N"
   rentention_num = 2
   frequency = 1
-      tags =[
-        {
-          key = "k2"
-          value = "v2"
-          }]
-
+      
   timeouts {
     create = "5m"
     delete = "5m"

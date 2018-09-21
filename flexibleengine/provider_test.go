@@ -29,6 +29,7 @@ var (
 	OS_SUBNET_ID              = os.Getenv("OS_SUBNET_ID")
 	OS_KEYPAIR_NAME           = os.Getenv("OS_KEYPAIR_NAME")
 	OS_BMS_FLAVOR_NAME        = os.Getenv("OS_BMS_FLAVOR_NAME")
+	OS_TO_TENANT_ID           = os.Getenv("OS_TO_TENANT_ID")
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
@@ -304,4 +305,12 @@ func testAccAsConfigPreCheck(t *testing.T) {
 	if OS_FLAVOR_ID == "" {
 		t.Skip("OS_FLAVOR_ID must be set for acceptance tests")
 	}
+}
+
+func testAccVBSBackupShareCheck(t *testing.T) {
+	testAccPreCheckRequiredEnvVars(t)
+	if OS_TO_TENANT_ID == "" {
+		t.Skip("OS_TO_TENANT_ID must be set for acceptance tests")
+	}
+
 }

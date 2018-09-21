@@ -60,10 +60,6 @@ func resourceVBSBackupV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			/*"incremental": &schema.Schema{
-				Type:     schema.TypeBool,
-				Computed: true,
-			},*/
 			"status": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -92,42 +88,8 @@ func resourceVBSBackupV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": &schema.Schema{
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": &schema.Schema{
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateVBSTagKey,
-						},
-						"value": &schema.Schema{
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateVBSTagValue,
-						},
-					},
-				},
-			},
 		},
 	}
-}
-
-func resourceVBSBackupTagsV2(d *schema.ResourceData) []backups.Tag {
-	rawTags := d.Get("tags").([]interface{})
-	tags := make([]backups.Tag, len(rawTags))
-	for i, raw := range rawTags {
-		rawMap := raw.(map[string]interface{})
-		tags[i] = backups.Tag{
-			Key:   rawMap["key"].(string),
-			Value: rawMap["value"].(string),
-		}
-	}
-	return tags
 }
 
 func resourceVBSBackupV2Create(d *schema.ResourceData, meta interface{}) error {
@@ -143,7 +105,6 @@ func resourceVBSBackupV2Create(d *schema.ResourceData, meta interface{}) error {
 		VolumeId:    d.Get("volume_id").(string),
 		SnapshotId:  d.Get("snapshot_id").(string),
 		Description: d.Get("description").(string),
-		Tags:        resourceVBSBackupTagsV2(d),
 	}
 
 	n, err := backups.Create(vbsClient, createOpts).ExtractJobResponse()
