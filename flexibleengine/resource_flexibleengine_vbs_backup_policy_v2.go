@@ -15,7 +15,6 @@ func resourceVBSBackupPolicyV2() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceVBSBackupPolicyV2Create,
 		Read:   resourceVBSBackupPolicyV2Read,
-		Update: resourceVBSBackupPolicyV2Update,
 		Delete: resourceVBSBackupPolicyV2Delete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -36,31 +35,37 @@ func resourceVBSBackupPolicyV2() *schema.Resource {
 			"name": &schema.Schema{
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateVBSPolicyName,
 			},
 
 			"start_time": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"frequency": &schema.Schema{
 				Type:         schema.TypeInt,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateVBSPolicyFrequency,
 			},
 			"rentention_num": &schema.Schema{
 				Type:         schema.TypeInt,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateVBSPolicyRetentionNum,
 			},
 			"retain_first_backup": &schema.Schema{
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateVBSPolicyRetainBackup,
 			},
 			"status": &schema.Schema{
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateVBSPolicyStatus,
 			},
 			"policy_resource_count": &schema.Schema{
@@ -145,41 +150,6 @@ func resourceVBSBackupPolicyV2Read(d *schema.ResourceData, meta interface{}) err
 	d.Set("policy_resource_count", n.ResourceCount)
 
 	return nil
-}
-
-func resourceVBSBackupPolicyV2Update(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(*Config)
-	vbsClient, err := config.vbsV2Client(GetRegion(d, config))
-	if err != nil {
-		return fmt.Errorf("Error updating backup policy: %s", err)
-	}
-	var updateOpts policies.UpdateOpts
-
-	if d.HasChange("name") {
-		updateOpts.Name = d.Get("name").(string)
-	}
-	if d.HasChange("start_time") {
-		updateOpts.ScheduledPolicy.StartTime = d.Get("start_time").(string)
-	}
-	if d.HasChange("frequency") {
-		updateOpts.ScheduledPolicy.Frequency = d.Get("frequency").(int)
-	}
-	if d.HasChange("rentention_num") {
-		updateOpts.ScheduledPolicy.RententionNum = d.Get("rentention_num").(int)
-	}
-	if d.HasChange("retain_first_backup") {
-		updateOpts.ScheduledPolicy.RemainFirstBackup = d.Get("retain_first_backup").(string)
-	}
-	if d.HasChange("status") {
-		updateOpts.ScheduledPolicy.Status = d.Get("status").(string)
-	}
-	_, err = policies.Update(vbsClient, d.Id(), updateOpts).Extract()
-
-	if err != nil {
-		return fmt.Errorf("Error updating backup policy: %s", err)
-	}
-
-	return resourceVBSBackupPolicyV2Read(d, meta)
 }
 
 func resourceVBSBackupPolicyV2Delete(d *schema.ResourceData, meta interface{}) error {

@@ -130,7 +130,7 @@ resource "flexibleengine_blockstorage_volume_v2" "volume_1" {
 
 resource "flexibleengine_vbs_backup_v2" "backup_1" {
   volume_id = "${flexibleengine_blockstorage_volume_v2.volume_1.id}"
-  name = "flexibleengine-backup"
+  name = "vbs-backup"
   description = "Backup_Demo"
 
   timeouts {
