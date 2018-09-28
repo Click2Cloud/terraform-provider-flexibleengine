@@ -358,9 +358,6 @@ func v3AKSKAuth(client *golangsdk.ProviderClient, endpoint string, options golan
 		}
 
 		client.EndpointLocator = func(opts golangsdk.EndpointOpts) (string, error) {
-			if opts.Region == "" {
-				opts.Region = options.Region
-			}
 			return V3EndpointURL(&tokens3.ServiceCatalog{
 				Entries: entries,
 			}, opts)
@@ -707,5 +704,29 @@ func NewBMSV2(client *golangsdk.ProviderClient, eo golangsdk.EndpointOpts) (*gol
 // NewDeHServiceV1 creates a ServiceClient that may be used to access the v1 Dedicated Hosts service.
 func NewDeHServiceV1(client *golangsdk.ProviderClient, eo golangsdk.EndpointOpts) (*golangsdk.ServiceClient, error) {
 	sc, err := initClientOpts(client, eo, "deh")
+	return sc, err
+}
+
+// NewCSBSService creates a ServiceClient that can be used to access the Cloud Server Backup service.
+func NewCSBSService(client *golangsdk.ProviderClient, eo golangsdk.EndpointOpts) (*golangsdk.ServiceClient, error) {
+	sc, err := initClientOpts(client, eo, "data-protect")
+	return sc, err
+}
+
+func NewMLSV1(client *golangsdk.ProviderClient, eo golangsdk.EndpointOpts) (*golangsdk.ServiceClient, error) {
+	sc, err := initClientOpts(client, eo, "network")
+	sc.Endpoint = strings.Replace(sc.Endpoint, "vpc", "mls", 1)
+	sc.ResourceBase = sc.Endpoint + "v1.0/" + client.ProjectID + "/"
+	return sc, err
+}
+
+func NewDWSClient(client *golangsdk.ProviderClient, eo golangsdk.EndpointOpts) (*golangsdk.ServiceClient, error) {
+	sc, err := initClientOpts(client, eo, "volumev2")
+	if err != nil {
+		return nil, err
+	}
+	e := strings.Replace(sc.Endpoint, "v2", "v1.0", 1)
+	sc.Endpoint = strings.Replace(e, "evs", "dws", 1)
+	sc.ResourceBase = sc.Endpoint
 	return sc, err
 }

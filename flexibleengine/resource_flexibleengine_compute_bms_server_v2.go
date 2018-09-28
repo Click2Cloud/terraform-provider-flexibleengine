@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/huaweicloud/golangsdk"
 	bms "github.com/huaweicloud/golangsdk/openstack/bms/v2/servers"
+	"github.com/huaweicloud/golangsdk/openstack/bms/v2/tags"
+	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/bootfromvolume"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/keypairs"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/secgroups"
 	"github.com/huaweicloud/golangsdk/openstack/compute/v2/extensions/startstop"
@@ -204,8 +206,76 @@ func resourceComputeBMSInstanceV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"block_device": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"source_type": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"uuid": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"volume_size": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"destination_type": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"boot_index": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"delete_on_termination": &schema.Schema{
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+							ForceNew: true,
+						},
+						"guest_format": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"device_name": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"volume_type": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 		},
 	}
+}
+
+func bmsTagsCreate(client *golangsdk.ServiceClient, server_id string) error {
+
+	createOpts := tags.CreateOpts{
+		Tag: []string{"__type_baremetal"},
+	}
+
+	_, err := tags.Create(client, server_id, createOpts).Extract()
+
+	if err != nil {
+		return fmt.Errorf("Error creating FlexibleEngine Tags: %s", err)
+	}
+	return nil
 }
 
 func resourceComputeBMSInstanceV2Create(d *schema.ResourceData, meta interface{}) error {
@@ -259,10 +329,26 @@ func resourceComputeBMSInstanceV2Create(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if vL, ok := d.GetOk("block_device"); ok {
+		blockDevices, err := resourceInstanceBlockDevicesV2(d, vL.([]interface{}))
+		if err != nil {
+			return err
+		}
+
+		createOpts = &bootfromvolume.CreateOptsExt{
+			CreateOptsBuilder: createOpts,
+			BlockDevice:       blockDevices,
+		}
+	}
+
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
 
-	server, err := servers.Create(computeClient, createOpts).Extract()
-
+	var server *servers.Server
+	if _, ok := d.GetOk("block_device"); ok {
+		server, err = bootfromvolume.Create(computeClient, createOpts).Extract()
+	} else {
+		server, err = servers.Create(computeClient, createOpts).Extract()
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating FlexibleEngine server: %s", err)
 	}
@@ -270,6 +356,16 @@ func resourceComputeBMSInstanceV2Create(d *schema.ResourceData, meta interface{}
 
 	// Store the ID now
 	d.SetId(server.ID)
+
+	// Set bms sepcific tag
+	bmsClient, err := config.bmsClient(GetRegion(d, config))
+	if err != nil {
+		return fmt.Errorf("Error creating FlexibleEngine bms client: %s", err)
+	}
+	err = bmsTagsCreate(bmsClient, d.Id())
+	if err != nil {
+		return fmt.Errorf("Error creating FlexibleEngine bms tag: %s", err)
+	}
 
 	// Wait for the instance to become running so we can get some attributes
 	// that aren't available until later.
