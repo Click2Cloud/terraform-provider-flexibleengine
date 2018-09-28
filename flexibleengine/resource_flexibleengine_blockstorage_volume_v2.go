@@ -309,7 +309,7 @@ func resourceBlockStorageVolumeV2Delete(d *schema.ResourceData, meta interface{}
 	// in a "deleting" state from when the instance was terminated.
 	// If this is true, just move on. It'll eventually delete.
 	if v.Status != "deleting" {
-		if err := volumes.Delete(blockStorageClient, d.Id(),deleteOpts).ExtractErr(); err != nil {
+		if err := volumes.Delete(blockStorageClient, d.Id(), deleteOpts).ExtractErr(); err != nil {
 			return CheckDeleted(d, err, "volume")
 		}
 	}
