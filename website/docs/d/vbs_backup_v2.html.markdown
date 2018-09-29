@@ -40,16 +40,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `availability_zone` - The AZ where the backup resides.
 
-* `fail_reason` - Cause of the backup failure.
-
 * `size` - The size of the vbs backup.
-
-* `object_count` - Number of objects on Object Storage Service (OBS) for the disk data.
 
 * `container` - The container of the backup.
 
-* `tenant_id` - The ID of the tenant to which the backup belongs.
-
 * `service_metadata` - The metadata of the vbs backup.
-
-

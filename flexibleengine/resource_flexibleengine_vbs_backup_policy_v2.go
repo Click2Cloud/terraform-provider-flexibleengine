@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/huaweicloud/golangsdk"
 	"github.com/huaweicloud/golangsdk/openstack/vbs/v2/policies"
@@ -104,18 +103,6 @@ func resourceVBSBackupPolicyV2Create(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Waiting for Backup Policy (%s) to become available", d.Id())
 
-	stateConf := &resource.StateChangeConf{
-		Target:     []string{"ON", "OFF"},
-		Refresh:    waitForVBSPolicyActive(vbsClient, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, Stateerr := stateConf.WaitForState()
-	if Stateerr != nil {
-		return fmt.Errorf("Error creating Backup Policy : %s", Stateerr)
-	}
-
 	return resourceVBSBackupPolicyV2Read(d, meta)
 
 }
@@ -158,65 +145,20 @@ func resourceVBSBackupPolicyV2Delete(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return fmt.Errorf("Error creating Backup Policy: %s", err)
 	}
+	delete := policies.Delete(vbsClient, d.Id())
+	if delete.Err != nil {
+		if _, ok := err.(golangsdk.ErrDefault404); ok {
+			log.Printf("[INFO] Successfully deleted VBS Backup Policy %s", d.Id())
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"available"},
-		Target:     []string{"deleted"},
-		Refresh:    waitForVBSPolicyDelete(vbsClient, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error deleting Backup Policy: %s", err)
+		}
+		if errCode, ok := err.(golangsdk.ErrUnexpectedResponseCode); ok {
+			if errCode.Actual == 409 {
+				log.Printf("[INFO] Error deleting VBS Backup Policy %s", d.Id())
+			}
+		}
+		log.Printf("[INFO] Successfully deleted VBS Backup Policy %s", d.Id())
 	}
 
 	d.SetId("")
 	return nil
-}
-
-func waitForVBSPolicyDelete(vbsClient *golangsdk.ServiceClient, policyID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		r, err := policies.List(vbsClient, policies.ListOpts{ID: policyID})
-
-		if err != nil {
-			if _, ok := err.(golangsdk.ErrDefault404); ok {
-				log.Printf("[INFO] Successfully deleted backup policy %s", policyID)
-				return r, "deleted", nil
-			}
-			return r, "available", err
-		}
-		delete := policies.Delete(vbsClient, policyID)
-		err = delete.Err
-		if err != nil {
-			if _, ok := err.(golangsdk.ErrDefault404); ok {
-				log.Printf("[INFO] Successfully deleted backup policy %s", policyID)
-				return r, "deleted", nil
-			}
-			if errCode, ok := err.(golangsdk.ErrUnexpectedResponseCode); ok {
-				if errCode.Actual == 409 {
-					return r, "available", nil
-				}
-			}
-			return r, "available", err
-		}
-
-		return r, "deleted", nil
-	}
-}
-
-func waitForVBSPolicyActive(vbsClient *golangsdk.ServiceClient, policyID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		PolicyOpts := policies.ListOpts{ID: policyID}
-		policies, err := policies.List(vbsClient, PolicyOpts)
-		if err != nil {
-			return nil, "", err
-		}
-		n := policies[0]
-
-		return n, n.ScheduledPolicy.Status, nil
-	}
 }
