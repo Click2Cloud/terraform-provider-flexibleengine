@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccOTCVBSBackupV2_importBasic(t *testing.T) {
+func TestAccVBSBackupV2_importBasic(t *testing.T) {
 	resourceName := "flexibleengine_vbs_backup_v2.backup_1"
 
 	resource.Test(t, resource.TestCase{
