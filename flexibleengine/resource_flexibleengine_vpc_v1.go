@@ -226,3 +226,6 @@ func waitForVpcDelete(vpcClient *golangsdk.ServiceClient, vpcId string) resource
 		return r, "ACTIVE", nil
 	}
 }
+
+
+
