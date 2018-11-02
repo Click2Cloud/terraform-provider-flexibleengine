@@ -76,6 +76,7 @@ func dataSourceCTSTrackerV1Read(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(trackers.TrackerName)
 
+	d.Set("tracker_name", trackers.TrackerName)
 	d.Set("bucket_name", trackers.BucketName)
 	d.Set("file_prefix_name", trackers.FilePrefixName)
 	d.Set("status", trackers.Status)

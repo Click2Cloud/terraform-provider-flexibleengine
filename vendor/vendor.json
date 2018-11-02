@@ -697,10 +697,10 @@
 			"revisionTime": "2018-09-27T09:20:51Z"
 		},
 		{
-			"checksumSHA1": "sXPkOsbXGunpRuKCzXJzx4D2UKk=",
+			"checksumSHA1": "fARrxptwoebtLy34WYimNOiGoXQ=",
 			"path": "github.com/huaweicloud/golangsdk/openstack/cts/v1/tracker",
-			"revision": "a23103fa132b6f9819536c96086751be278bad0a",
-			"revisionTime": "2018-10-31T11:50:06Z"
+			"revision": "ae9cc3eae93ef4d331b236ed03560cc3d509b85d",
+			"revisionTime": "2018-11-01T13:49:30Z"
 		},
 		{
 			"checksumSHA1": "plsG8kyRJhFGnhGfO0scQk5kRLw=",
