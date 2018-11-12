@@ -91,8 +91,8 @@ type CreateOptsWithSMN struct {
 // CreateOpts contains the options for create a Tracker. This object is
 // passed to tracker.Create().
 type CreateOpts struct {
-	BucketName                string                    `json:"bucket_name" required:"true"`
-	FilePrefixName            string                    `json:"file_prefix_name,omitempty"`
+	BucketName     string `json:"bucket_name" required:"true"`
+	FilePrefixName string `json:"file_prefix_name,omitempty"`
 }
 
 type SimpleMessageNotification struct {
@@ -141,9 +141,9 @@ type UpdateOptsWithSMN struct {
 
 // UpdateOpts contains all the values needed to update a  tracker
 type UpdateOpts struct {
-	Status                    string                    `json:"status,omitempty"`
-	BucketName                string                    `json:"bucket_name" required:"true"`
-	FilePrefixName            string                    `json:"file_prefix_name,omitempty"`
+	Status         string `json:"status,omitempty"`
+	BucketName     string `json:"bucket_name" required:"true"`
+	FilePrefixName string `json:"file_prefix_name,omitempty"`
 }
 
 // UpdateOptsBuilder allows extensions to add additional parameters to the
