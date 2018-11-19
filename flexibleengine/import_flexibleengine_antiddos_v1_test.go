@@ -26,4 +26,3 @@ func TestAccAntiDdosV1_importBasic(t *testing.T) {
 		},
 	})
 }
-

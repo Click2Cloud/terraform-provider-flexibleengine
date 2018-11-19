@@ -188,7 +188,7 @@ func resourceAntiDdosV1Delete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"normal","configging"},
+		Pending:    []string{"normal", "configging"},
 		Target:     []string{"notConfig"},
 		Refresh:    waitForAntiDdosDelete(antiddosClient, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
